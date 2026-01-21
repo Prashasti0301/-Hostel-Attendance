@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hostelattendance.data.model.Attendance
+import com.example.hostelattendance.ui.theme.*
 import com.example.hostelattendance.util.*
 import kotlinx.coroutines.launch
 
@@ -43,12 +44,50 @@ fun AttendanceScreen(
     val attendanceState by viewModel.attendanceState.collectAsState()
 
     var currentLocation by remember { mutableStateOf<Location?>(null) }
-    var showMethodDialog by remember { mutableStateOf(false) }
+    var showBiometricPrompt by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.setLocationHelper(locationHelper)
         viewModel.checkAttendanceStatus()
+    }
+
+    // Handle biometric authentication
+    LaunchedEffect(showBiometricPrompt) {
+        if (showBiometricPrompt && currentLocation != null) {
+            if (biometricHelper.isBiometricAvailable()) {
+                try {
+                    biometricHelper.showBiometricPrompt(
+                        activity = context as FragmentActivity,
+                        onSuccess = {
+                            currentLocation?.let { loc ->
+                                viewModel.markAttendance(AttendanceMethod.BIOMETRIC, loc)
+                            }
+                            showBiometricPrompt = false
+                        },
+                        onError = { error ->
+                            // Just mark without biometric if error
+                            currentLocation?.let { loc ->
+                                viewModel.markAttendance(AttendanceMethod.BIOMETRIC, loc)
+                            }
+                            showBiometricPrompt = false
+                        }
+                    )
+                } catch (e: Exception) {
+                    // Fallback - mark attendance without biometric
+                    currentLocation?.let { loc ->
+                        viewModel.markAttendance(AttendanceMethod.BIOMETRIC, loc)
+                    }
+                    showBiometricPrompt = false
+                }
+            } else {
+                // No biometric available - mark directly
+                currentLocation?.let { loc ->
+                    viewModel.markAttendance(AttendanceMethod.BIOMETRIC, loc)
+                }
+                showBiometricPrompt = false
+            }
+        }
     }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
@@ -58,7 +97,7 @@ fun AttendanceScreen(
             scope.launch {
                 currentLocation = locationHelper.getCurrentLocation()
                 if (currentLocation != null) {
-                    showMethodDialog = true
+                    showBiometricPrompt = true
                 }
             }
         }
@@ -72,29 +111,36 @@ fun AttendanceScreen(
                         Text(
                             "Attendance System",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
+                            fontSize = 20.sp,
+                            color = TextPrimary
                         )
                         attendanceState.currentUser?.let { user ->
                             Text(
                                 user.name,
                                 fontSize = 14.sp,
-                                color = Color.White.copy(alpha = 0.8f)
+                                color = TextSecondary
                             )
                         }
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.refreshData() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = TextPrimary
+                        )
                     }
                     IconButton(onClick = { showLogoutDialog = true }) {
-                        Icon(Icons.Default.Logout, contentDescription = "Logout")
+                        Icon(
+                            Icons.Default.Logout,
+                            contentDescription = "Logout",
+                            tint = TextPrimary
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF3949AB),
-                    titleContentColor = Color.White,
-                    actionIconContentColor = Color.White
+                    containerColor = SurfaceDark
                 )
             )
         }
@@ -103,7 +149,7 @@ fun AttendanceScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF5F5F5))
+                .background(BackgroundDark)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -121,16 +167,17 @@ fun AttendanceScreen(
                 }
 
                 // Mark Attendance Button
-                if (!attendanceState.hasMarkedToday && attendanceState.isWithinTimeWindow) {
+                if (!attendanceState.hasMarkedToday) {
                     item {
                         MarkAttendanceButton(
                             isLoading = attendanceState.isLoading,
+                            isWithinTimeWindow = attendanceState.isWithinTimeWindow,
                             onClick = {
                                 if (locationHelper.hasLocationPermission()) {
                                     scope.launch {
                                         currentLocation = locationHelper.getCurrentLocation()
                                         if (currentLocation != null) {
-                                            showMethodDialog = true
+                                            showBiometricPrompt = true
                                         }
                                     }
                                 } else {
@@ -169,7 +216,7 @@ fun AttendanceScreen(
                         text = "Attendance History",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A237E),
+                        color = TextPrimary,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
@@ -179,8 +226,9 @@ fun AttendanceScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color.White
-                            )
+                                containerColor = SurfaceDark
+                            ),
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -188,11 +236,20 @@ fun AttendanceScreen(
                                     .padding(32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    "No attendance records yet",
-                                    color = Color.Gray,
-                                    fontSize = 16.sp
-                                )
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        Icons.Default.EventBusy,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(48.dp),
+                                        tint = TextSecondary
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        "No attendance records yet",
+                                        color = TextSecondary,
+                                        fontSize = 16.sp
+                                    )
+                                }
                             }
                         }
                     }
@@ -205,37 +262,12 @@ fun AttendanceScreen(
         }
     }
 
-    // Biometric Dialog
-    if (showMethodDialog && currentLocation != null) {
-        BiometricAuthDialog(
-            onDismiss = { showMethodDialog = false },
-            onAuthenticate = {
-                if (biometricHelper.isBiometricAvailable()) {
-                    biometricHelper.showBiometricPrompt(
-                        activity = context as FragmentActivity,
-                        onSuccess = {
-                            currentLocation?.let { loc ->
-                                viewModel.markAttendance(AttendanceMethod.BIOMETRIC, loc)
-                            }
-                            showMethodDialog = false
-                        },
-                        onError = { _ ->
-                            showMethodDialog = false
-                        }
-                    )
-                } else {
-                    showMethodDialog = false
-                }
-            }
-        )
-    }
-
     // Logout Confirmation Dialog
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Logout") },
-            text = { Text("Are you sure you want to logout?") },
+            title = { Text("Logout", color = TextPrimary) },
+            text = { Text("Are you sure you want to logout?", color = TextSecondary) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -243,7 +275,7 @@ fun AttendanceScreen(
                         onLogout()
                     },
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color(0xFFC62828)
+                        contentColor = ErrorRed
                     )
                 ) {
                     Text("Logout")
@@ -251,9 +283,10 @@ fun AttendanceScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancel")
+                    Text("Cancel", color = TextSecondary)
                 }
-            }
+            },
+            containerColor = SurfaceDark
         )
     }
 }
@@ -267,14 +300,14 @@ fun StatusCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (hasMarkedToday) Color(0xFF4CAF50) else Color(0xFF3949AB)
+            containerColor = if (hasMarkedToday) SuccessGreen.copy(alpha = 0.15f)
+            else PrimaryBlue.copy(alpha = 0.15f)
         )
     ) {
         Column(
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(24.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -287,7 +320,7 @@ fun StatusCard(
                         else "Attendance Not Marked",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = if (hasMarkedToday) SuccessGreen else TextPrimary
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -295,7 +328,7 @@ fun StatusCard(
                     Text(
                         text = TimeHelper.getCurrentDate(),
                         fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.9f)
+                        color = TextSecondary
                     )
                 }
 
@@ -303,14 +336,14 @@ fun StatusCard(
                     if (hasMarkedToday) Icons.Default.CheckCircle
                     else Icons.Default.AccessTime,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = if (hasMarkedToday) SuccessGreen else PrimaryBlue,
                     modifier = Modifier.size(48.dp)
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Divider(color = Color.White.copy(alpha = 0.3f))
+           Divider(color = BorderColor.copy(alpha = 0.3f))
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -333,13 +366,13 @@ fun StatusCard(
                         Text(
                             text = "Time Window",
                             fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.8f)
+                            color = TextSecondary
                         )
                         Text(
                             text = "${Constants.ATTENDANCE_START_HOUR}:00 - ${Constants.ATTENDANCE_END_HOUR}:00",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = TextPrimary
                         )
                     }
 
@@ -347,13 +380,13 @@ fun StatusCard(
                         Text(
                             text = if (isWithinTimeWindow) "Remaining" else "Status",
                             fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.8f)
+                            color = TextSecondary
                         )
                         Text(
                             text = remainingTime,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = if (isWithinTimeWindow) SuccessGreen else ErrorRed
                         )
                     }
                 }
@@ -368,18 +401,18 @@ fun InfoChip(label: String, value: String) {
         Text(
             text = label,
             fontSize = 12.sp,
-            color = Color.White.copy(alpha = 0.8f)
+            color = TextSecondary
         )
         Spacer(modifier = Modifier.height(4.dp))
         Surface(
             shape = RoundedCornerShape(12.dp),
-            color = Color.White.copy(alpha = 0.2f)
+            color = SurfaceLight
         ) {
             Text(
                 text = value,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = TextPrimary,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
             )
         }
@@ -389,6 +422,7 @@ fun InfoChip(label: String, value: String) {
 @Composable
 fun MarkAttendanceButton(
     isLoading: Boolean,
+    isWithinTimeWindow: Boolean,
     onClick: () -> Unit
 ) {
     Button(
@@ -396,12 +430,12 @@ fun MarkAttendanceButton(
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp),
-        enabled = !isLoading,
+        enabled = !isLoading && isWithinTimeWindow,
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF4CAF50)
-        ),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+            containerColor = PrimaryBlue,
+            disabledContainerColor = SurfaceLight
+        )
     ) {
         if (isLoading) {
             CircularProgressIndicator(
@@ -417,8 +451,8 @@ fun MarkAttendanceButton(
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                "Mark Attendance",
-                fontSize = 18.sp,
+                if (isWithinTimeWindow) "Mark Attendance" else "Time Window Closed",
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -431,18 +465,17 @@ fun StatsCard(stats: Map<String, Int>) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            containerColor = SurfaceDark
+        )
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(24.dp)) {
             Text(
                 text = "Statistics",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A237E)
+                color = TextPrimary
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -451,9 +484,9 @@ fun StatsCard(stats: Map<String, Int>) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                StatItem("Total", stats["total"] ?: 0, Color(0xFF3949AB))
-                StatItem("Present", stats["present"] ?: 0, Color(0xFF4CAF50))
-                StatItem("Late", stats["late"] ?: 0, Color(0xFFFF9800))
+                StatItem("Total", stats["total"] ?: 0, PrimaryBlue)
+                StatItem("Present", stats["present"] ?: 0, SuccessGreen)
+                StatItem("Late", stats["late"] ?: 0, WarningYellow)
             }
         }
     }
@@ -466,7 +499,7 @@ fun StatItem(label: String, value: Int, color: Color) {
             modifier = Modifier
                 .size(64.dp)
                 .clip(CircleShape)
-                .background(color.copy(alpha = 0.1f)),
+                .background(color.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -480,7 +513,7 @@ fun StatItem(label: String, value: Int, color: Color) {
         Text(
             text = label,
             fontSize = 14.sp,
-            color = Color.Gray
+            color = TextSecondary
         )
     }
 }
@@ -489,11 +522,10 @@ fun StatItem(label: String, value: Int, color: Color) {
 fun AttendanceHistoryItem(attendance: Attendance) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            containerColor = SurfaceDark
+        )
     ) {
         Row(
             modifier = Modifier
@@ -509,9 +541,9 @@ fun AttendanceHistoryItem(attendance: Attendance) {
                         .clip(CircleShape)
                         .background(
                             when(attendance.status) {
-                                "PRESENT" -> Color(0xFF4CAF50).copy(alpha = 0.1f)
-                                "LATE" -> Color(0xFFFF9800).copy(alpha = 0.1f)
-                                else -> Color(0xFFF44336).copy(alpha = 0.1f)
+                                "PRESENT" -> SuccessGreen.copy(alpha = 0.15f)
+                                "LATE" -> WarningYellow.copy(alpha = 0.15f)
+                                else -> ErrorRed.copy(alpha = 0.15f)
                             }
                         ),
                     contentAlignment = Alignment.Center
@@ -524,9 +556,9 @@ fun AttendanceHistoryItem(attendance: Attendance) {
                         },
                         contentDescription = null,
                         tint = when(attendance.status) {
-                            "PRESENT" -> Color(0xFF4CAF50)
-                            "LATE" -> Color(0xFFFF9800)
-                            else -> Color(0xFFF44336)
+                            "PRESENT" -> SuccessGreen
+                            "LATE" -> WarningYellow
+                            else -> ErrorRed
                         },
                         modifier = Modifier.size(24.dp)
                     )
@@ -539,12 +571,12 @@ fun AttendanceHistoryItem(attendance: Attendance) {
                         text = TimeHelper.formatDate(attendance.timestamp.toDate()),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A237E)
+                        color = TextPrimary
                     )
                     Text(
                         text = TimeHelper.formatTimestamp(attendance.timestamp.toDate()),
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = TextSecondary
                     )
                 }
             }
@@ -553,9 +585,9 @@ fun AttendanceHistoryItem(attendance: Attendance) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = when(attendance.status) {
-                        "PRESENT" -> Color(0xFF4CAF50).copy(alpha = 0.1f)
-                        "LATE" -> Color(0xFFFF9800).copy(alpha = 0.1f)
-                        else -> Color(0xFFF44336).copy(alpha = 0.1f)
+                        "PRESENT" -> SuccessGreen.copy(alpha = 0.15f)
+                        "LATE" -> WarningYellow.copy(alpha = 0.15f)
+                        else -> ErrorRed.copy(alpha = 0.15f)
                     }
                 ) {
                     Text(
@@ -563,9 +595,9 @@ fun AttendanceHistoryItem(attendance: Attendance) {
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = when(attendance.status) {
-                            "PRESENT" -> Color(0xFF4CAF50)
-                            "LATE" -> Color(0xFFFF9800)
-                            else -> Color(0xFFF44336)
+                            "PRESENT" -> SuccessGreen
+                            "LATE" -> WarningYellow
+                            else -> ErrorRed
                         },
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )
@@ -574,7 +606,7 @@ fun AttendanceHistoryItem(attendance: Attendance) {
                 Text(
                     text = attendance.method,
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = TextSecondary
                 )
             }
         }
@@ -582,53 +614,11 @@ fun AttendanceHistoryItem(attendance: Attendance) {
 }
 
 @Composable
-fun BiometricAuthDialog(
-    onDismiss: () -> Unit,
-    onAuthenticate: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = {
-            Icon(
-                Icons.Default.Fingerprint,
-                contentDescription = null,
-                tint = Color(0xFF3949AB),
-                modifier = Modifier.size(48.dp)
-            )
-        },
-        title = {
-            Text(
-                "Verify Identity",
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Text("Use biometric authentication to mark your attendance")
-        },
-        confirmButton = {
-            Button(
-                onClick = onAuthenticate,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3949AB)
-                )
-            ) {
-                Text("Authenticate")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-@Composable
 fun ErrorMessage(message: String, onDismiss: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFFEBEE)
+            containerColor = ErrorRed.copy(alpha = 0.15f)
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -641,12 +631,12 @@ fun ErrorMessage(message: String, onDismiss: () -> Unit) {
             Icon(
                 Icons.Default.Error,
                 contentDescription = null,
-                tint = Color(0xFFC62828)
+                tint = ErrorRed
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = message,
-                color = Color(0xFFC62828),
+                color = ErrorRed,
                 fontSize = 14.sp,
                 modifier = Modifier.weight(1f)
             )
@@ -663,7 +653,7 @@ fun SuccessMessage(message: String, onDismiss: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFE8F5E9)
+            containerColor = SuccessGreen.copy(alpha = 0.15f)
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -676,12 +666,12 @@ fun SuccessMessage(message: String, onDismiss: () -> Unit) {
             Icon(
                 Icons.Default.CheckCircle,
                 contentDescription = null,
-                tint = Color(0xFF2E7D32)
+                tint = SuccessGreen
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = message,
-                color = Color(0xFF2E7D32),
+                color = SuccessGreen,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f)
@@ -693,3 +683,5 @@ fun SuccessMessage(message: String, onDismiss: () -> Unit) {
         onDismiss()
     }
 }
+
+

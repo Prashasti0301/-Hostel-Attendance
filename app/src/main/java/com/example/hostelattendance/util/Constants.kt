@@ -6,13 +6,13 @@ object Constants {
     // Hostel Boundary - CHANGE TO YOUR ACTUAL COORDINATES!
     // To find: Open Google Maps → Right-click hostel → Click coordinates
     val HOSTEL_CENTER = GeoPoint(24.6512, 77.4346) // JUET Guna approximate
-    const val HOSTEL_RADIUS_METERS = 200.0 // 200 meters radius
+    const val HOSTEL_RADIUS_METERS = 50000.0 // 200 meters radius
 
     // Attendance Time Window
-    const val ATTENDANCE_START_HOUR = 8
+    const val ATTENDANCE_START_HOUR = 0
     const val ATTENDANCE_START_MINUTE = 0
-    const val ATTENDANCE_END_HOUR = 9
-    const val ATTENDANCE_END_MINUTE = 0
+    const val ATTENDANCE_END_HOUR = 23
+    const val ATTENDANCE_END_MINUTE = 59
     const val LATE_THRESHOLD_MINUTES = 15
 
     // Email Validation

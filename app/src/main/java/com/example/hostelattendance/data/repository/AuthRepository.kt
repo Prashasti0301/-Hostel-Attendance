@@ -14,7 +14,8 @@ class AuthRepository {
         email: String,
         password: String,
         enrollmentNumber: String,
-        name: String
+        name: String,
+
     ): Result<String> {
         return try {
             if (!email.endsWith(Constants.ALLOWED_EMAIL_DOMAIN)) {

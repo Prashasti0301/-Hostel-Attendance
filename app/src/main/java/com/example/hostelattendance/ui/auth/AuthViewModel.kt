@@ -26,7 +26,8 @@ class AuthViewModel(
         password: String,
         confirmPassword: String,
         enrollmentNumber: String,
-        name: String
+        name: String,
+
     ) {
         viewModelScope.launch {
             // Validation

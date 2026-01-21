@@ -8,5 +8,6 @@ data class User(
     val email: String = "",
     val name: String = "",
     val registeredAt: Timestamp = Timestamp.now(),
-    val biometricEnabled: Boolean = false
+    val biometricEnabled: Boolean = false,
+    val deviceId: String = ""
 )

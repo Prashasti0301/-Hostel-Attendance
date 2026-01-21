@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -19,6 +20,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.hostelattendance.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +36,7 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+   
 
     val authState by viewModel.authState.collectAsState()
 
@@ -47,16 +50,23 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF1A237E),
-                        Color(0xFF283593),
-                        Color(0xFF3949AB)
+            .background(BackgroundDark)
+    ) {
+        // Gradient Background
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            PrimaryBlue.copy(alpha = 0.3f),
+                            BackgroundDark
+                        )
                     )
                 )
-            )
-    ) {
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -65,42 +75,60 @@ fun RegisterScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // App Title
+            // Logo
+            Surface(
+                modifier = Modifier.size(80.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = PrimaryBlue.copy(alpha = 0.2f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.PersonAdd,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = PrimaryBlue
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Text(
                 text = "CREATE ACCOUNT",
-                fontSize = 32.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
-                letterSpacing = 2.sp
+                color = TextPrimary,
+                letterSpacing = 1.5.sp
             )
 
             Text(
                 text = "Join JUET Hostel Attendance",
                 fontSize = 16.sp,
-                color = Color.White.copy(alpha = 0.8f),
-                modifier = Modifier.padding(top = 8.dp)
+                color = TextSecondary,
+                modifier = Modifier.padding(top = 4.dp),
+                fontWeight = FontWeight.Medium
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Register Card
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(8.dp, RoundedCornerShape(24.dp)),
                 shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.White
+                    containerColor = SurfaceDark
                 )
             ) {
                 Column(
-                    modifier = Modifier.padding(24.dp),
+                    modifier = Modifier.padding(28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = "Register",
-                        fontSize = 28.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A237E)
+                        color = TextPrimary
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -109,36 +137,42 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("Full Name") },
-                        placeholder = { Text("Enter your full name") },
+                        label = { Text("Full Name", color = TextSecondary) },
+                        placeholder = { Text("Enter your full name", color = TextSecondary.copy(alpha = 0.5f)) },
                         leadingIcon = {
-                            Icon(Icons.Default.Person, contentDescription = null)
+                            Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryBlue)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3949AB),
-                            focusedLabelColor = Color(0xFF3949AB)
+                            focusedBorderColor = PrimaryBlue,
+                            unfocusedBorderColor = BorderColor,
+                            cursorColor = PrimaryBlue,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
                         ),
                         shape = RoundedCornerShape(12.dp)
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Enrollment Number Field
+                    // Enrollment Field
                     OutlinedTextField(
                         value = enrollmentNumber,
                         onValueChange = { enrollmentNumber = it },
-                        label = { Text("Enrollment Number") },
-                        placeholder = { Text("e.g., 21SCSE1234567") },
+                        label = { Text("Enrollment Number", color = TextSecondary) },
+                        placeholder = { Text("e.g., 21SCSE1234567", color = TextSecondary.copy(alpha = 0.5f)) },
                         leadingIcon = {
-                            Icon(Icons.Default.Badge, contentDescription = null)
+                            Icon(Icons.Default.Badge, contentDescription = null, tint = PrimaryBlue)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3949AB),
-                            focusedLabelColor = Color(0xFF3949AB)
+                            focusedBorderColor = PrimaryBlue,
+                            unfocusedBorderColor = BorderColor,
+                            cursorColor = PrimaryBlue,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
                         ),
                         shape = RoundedCornerShape(12.dp)
                     )
@@ -149,16 +183,19 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = { Text("Email Address") },
-                        placeholder = { Text("your.name@juetguna.in") },
+                        label = { Text("Email Address", color = TextSecondary) },
+                        placeholder = { Text("your.name@juetguna.in", color = TextSecondary.copy(alpha = 0.5f)) },
                         leadingIcon = {
-                            Icon(Icons.Default.Email, contentDescription = null)
+                            Icon(Icons.Default.Email, contentDescription = null, tint = PrimaryBlue)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3949AB),
-                            focusedLabelColor = Color(0xFF3949AB)
+                            focusedBorderColor = PrimaryBlue,
+                            unfocusedBorderColor = BorderColor,
+                            cursorColor = PrimaryBlue,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
                         ),
                         shape = RoundedCornerShape(12.dp)
                     )
@@ -169,17 +206,17 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("Password") },
-                        placeholder = { Text("Minimum 6 characters") },
+                        label = { Text("Password", color = TextSecondary) },
+                        placeholder = { Text("Minimum 6 characters", color = TextSecondary.copy(alpha = 0.5f)) },
                         leadingIcon = {
-                            Icon(Icons.Default.Lock, contentDescription = null)
+                            Icon(Icons.Default.Lock, contentDescription = null, tint = PrimaryBlue)
                         },
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
-                                    if (passwordVisible) Icons.Default.VisibilityOff
-                                    else Icons.Default.Visibility,
-                                    contentDescription = null
+                                    if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = null,
+                                    tint = TextSecondary
                                 )
                             }
                         },
@@ -188,8 +225,11 @@ fun RegisterScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3949AB),
-                            focusedLabelColor = Color(0xFF3949AB)
+                            focusedBorderColor = PrimaryBlue,
+                            unfocusedBorderColor = BorderColor,
+                            cursorColor = PrimaryBlue,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
                         ),
                         shape = RoundedCornerShape(12.dp)
                     )
@@ -200,17 +240,17 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
-                        label = { Text("Confirm Password") },
-                        placeholder = { Text("Re-enter password") },
+                        label = { Text("Confirm Password", color = TextSecondary) },
+                        placeholder = { Text("Re-enter password", color = TextSecondary.copy(alpha = 0.5f)) },
                         leadingIcon = {
-                            Icon(Icons.Default.Lock, contentDescription = null)
+                            Icon(Icons.Default.Lock, contentDescription = null, tint = PrimaryBlue)
                         },
                         trailingIcon = {
                             IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                                 Icon(
-                                    if (confirmPasswordVisible) Icons.Default.VisibilityOff
-                                    else Icons.Default.Visibility,
-                                    contentDescription = null
+                                    if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = null,
+                                    tint = TextSecondary
                                 )
                             }
                         },
@@ -219,8 +259,11 @@ fun RegisterScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3949AB),
-                            focusedLabelColor = Color(0xFF3949AB)
+                            focusedBorderColor = PrimaryBlue,
+                            unfocusedBorderColor = BorderColor,
+                            cursorColor = PrimaryBlue,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
                         ),
                         shape = RoundedCornerShape(12.dp)
                     )
@@ -238,7 +281,8 @@ fun RegisterScreen(
                         enabled = !authState.isLoading,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF3949AB)
+                            containerColor = PrimaryBlue,
+                            disabledContainerColor = PrimaryBlue.copy(alpha = 0.5f)
                         )
                     ) {
                         if (authState.isLoading) {
@@ -250,8 +294,9 @@ fun RegisterScreen(
                         } else {
                             Text(
                                 "Create Account",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
                             )
                         }
                     }
@@ -259,18 +304,28 @@ fun RegisterScreen(
                     // Error Message
                     authState.error?.let { error ->
                         Spacer(modifier = Modifier.height(16.dp))
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFFFFEBEE)
-                            ),
+                        Surface(
+                            color = ErrorRed.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = error,
-                                color = Color(0xFFC62828),
+                            Row(
                                 modifier = Modifier.padding(12.dp),
-                                fontSize = 14.sp
-                            )
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Error,
+                                    contentDescription = null,
+                                    tint = ErrorRed,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = error,
+                                    color = ErrorRed,
+                                    fontSize = 13.sp
+                                )
+                            }
                         }
                         LaunchedEffect(error) {
                             kotlinx.coroutines.delay(4000)
@@ -286,13 +341,15 @@ fun RegisterScreen(
             TextButton(
                 onClick = onNavigateToLogin,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = Color.White
+                    contentColor = TextSecondary
                 )
             ) {
+                Text("Already have an account? ", fontSize = 14.sp)
                 Text(
-                    "Already have an account? Sign In",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    "Sign In",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryBlue
                 )
             }
         }

@@ -16,7 +16,8 @@ class UserRepository {
         userId: String,
         enrollmentNumber: String,
         email: String,
-        name: String
+        name: String,
+
     ): Result<Unit> {
         return try {
             val user = User(
@@ -25,7 +26,8 @@ class UserRepository {
                 email = email,
                 name = name,
                 registeredAt = Timestamp.now(),
-                biometricEnabled = false
+                biometricEnabled = false,
+
             )
 
             db.collection(Constants.COLLECTION_USERS)

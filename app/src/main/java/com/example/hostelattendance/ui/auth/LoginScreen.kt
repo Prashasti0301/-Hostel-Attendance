@@ -6,14 +6,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -22,6 +20,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.hostelattendance.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,16 +45,23 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF1A237E),
-                        Color(0xFF283593),
-                        Color(0xFF3949AB)
+            .background(BackgroundDark)
+    ) {
+        // Gradient Background Effect
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            PrimaryBlue.copy(alpha = 0.3f),
+                            BackgroundDark
+                        )
                     )
                 )
-            )
-    ) {
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -64,42 +70,69 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // Logo/Icon
+            Surface(
+                modifier = Modifier.size(80.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = PrimaryBlue.copy(alpha = 0.2f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.School,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = PrimaryBlue
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // App Title
             Text(
                 text = "HOSTEL ATTENDANCE",
-                fontSize = 32.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
-                letterSpacing = 2.sp
+                color = TextPrimary,
+                letterSpacing = 1.5.sp
             )
 
             Text(
                 text = "JUET Guna",
                 fontSize = 16.sp,
-                color = Color.White.copy(alpha = 0.8f),
-                modifier = Modifier.padding(top = 8.dp)
+                color = TextSecondary,
+                modifier = Modifier.padding(top = 4.dp),
+                fontWeight = FontWeight.Medium
             )
 
             Spacer(modifier = Modifier.height(48.dp))
 
             // Login Card
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(8.dp, RoundedCornerShape(24.dp)),
                 shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.White
+                    containerColor = SurfaceDark
                 )
             ) {
                 Column(
-                    modifier = Modifier.padding(24.dp),
+                    modifier = Modifier.padding(28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Sign In",
-                        fontSize = 28.sp,
+                        text = "Welcome Back",
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A237E)
+                        color = TextPrimary
+                    )
+
+                    Text(
+                        text = "Sign in to continue",
+                        fontSize = 14.sp,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
 
                     Spacer(modifier = Modifier.height(32.dp))
@@ -108,38 +141,59 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = { Text("Email Address") },
-                        placeholder = { Text("your.name@juetguna.in") },
+                        label = {
+                            Text("Email Address", color = TextSecondary)
+                        },
+                        placeholder = {
+                            Text("your.name@juetguna.in", color = TextSecondary.copy(alpha = 0.5f))
+                        },
                         leadingIcon = {
-                            Icon(Icons.Default.Email, contentDescription = null)
+                            Icon(
+                                Icons.Default.Email,
+                                contentDescription = null,
+                                tint = PrimaryBlue
+                            )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3949AB),
-                            focusedLabelColor = Color(0xFF3949AB)
+                            focusedBorderColor = PrimaryBlue,
+                            unfocusedBorderColor = BorderColor,
+                            focusedLabelColor = PrimaryBlue,
+                            unfocusedLabelColor = TextSecondary,
+                            cursorColor = PrimaryBlue,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
                         ),
                         shape = RoundedCornerShape(12.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     // Password Field
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("Password") },
-                        placeholder = { Text("Enter your password") },
+                        label = {
+                            Text("Password", color = TextSecondary)
+                        },
+                        placeholder = {
+                            Text("Enter your password", color = TextSecondary.copy(alpha = 0.5f))
+                        },
                         leadingIcon = {
-                            Icon(Icons.Default.Lock, contentDescription = null)
+                            Icon(
+                                Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = PrimaryBlue
+                            )
                         },
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
                                     if (passwordVisible) Icons.Default.VisibilityOff
                                     else Icons.Default.Visibility,
-                                    contentDescription = if (passwordVisible) "Hide password"
-                                    else "Show password"
+                                    contentDescription = null,
+                                    tint = TextSecondary
                                 )
                             }
                         },
@@ -148,13 +202,18 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3949AB),
-                            focusedLabelColor = Color(0xFF3949AB)
+                            focusedBorderColor = PrimaryBlue,
+                            unfocusedBorderColor = BorderColor,
+                            focusedLabelColor = PrimaryBlue,
+                            unfocusedLabelColor = TextSecondary,
+                            cursorColor = PrimaryBlue,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
                         ),
                         shape = RoundedCornerShape(12.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
 
                     // Login Button
                     Button(
@@ -165,7 +224,8 @@ fun LoginScreen(
                         enabled = !authState.isLoading,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF3949AB)
+                            containerColor = PrimaryBlue,
+                            disabledContainerColor = PrimaryBlue.copy(alpha = 0.5f)
                         )
                     ) {
                         if (authState.isLoading) {
@@ -177,8 +237,9 @@ fun LoginScreen(
                         } else {
                             Text(
                                 "Sign In",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
                             )
                         }
                     }
@@ -186,18 +247,28 @@ fun LoginScreen(
                     // Error Message
                     authState.error?.let { error ->
                         Spacer(modifier = Modifier.height(16.dp))
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFFFFEBEE)
-                            ),
+                        Surface(
+                            color = ErrorRed.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = error,
-                                color = Color(0xFFC62828),
+                            Row(
                                 modifier = Modifier.padding(12.dp),
-                                fontSize = 14.sp
-                            )
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Error,
+                                    contentDescription = null,
+                                    tint = ErrorRed,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = error,
+                                    color = ErrorRed,
+                                    fontSize = 13.sp
+                                )
+                            }
                         }
                         LaunchedEffect(error) {
                             kotlinx.coroutines.delay(4000)
@@ -213,13 +284,18 @@ fun LoginScreen(
             TextButton(
                 onClick = onNavigateToRegister,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = Color.White
+                    contentColor = TextSecondary
                 )
             ) {
                 Text(
-                    "Don't have an account? Register Now",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    "Don't have an account? ",
+                    fontSize = 14.sp
+                )
+                Text(
+                    "Register Now",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryBlue
                 )
             }
         }
