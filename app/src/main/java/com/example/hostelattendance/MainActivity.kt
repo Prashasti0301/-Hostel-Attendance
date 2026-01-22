@@ -1,14 +1,16 @@
 package com.example.hostelattendance
 
+import android.Manifest
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -20,8 +22,35 @@ import com.example.hostelattendance.ui.navigation.Screen
 import com.example.hostelattendance.ui.theme.HostelAttendanceTheme
 
 class MainActivity : ComponentActivity() {
+
+    // ✅ Permission launcher - ADDED
+    private val locationPermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        when {
+            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true -> {
+                Toast.makeText(this, "✅ Location permission granted!", Toast.LENGTH_SHORT).show()
+            }
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true -> {
+                Toast.makeText(this, "⚠️ Approximate location granted", Toast.LENGTH_SHORT).show()
+            }
+            else -> {
+                Toast.makeText(this, "❌ Location permission denied. Cannot mark attendance!", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ✅ Request location permission - ADDED
+        locationPermissionRequest.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+
         setContent {
             HostelAttendanceTheme {
                 Surface(
