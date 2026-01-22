@@ -28,6 +28,7 @@ import com.example.hostelattendance.data.model.Attendance
 import com.example.hostelattendance.ui.theme.*
 import com.example.hostelattendance.util.*
 import kotlinx.coroutines.launch
+import android.widget.Toast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -169,25 +170,138 @@ fun AttendanceScreen(
                 // Mark Attendance Button
                 if (!attendanceState.hasMarkedToday) {
                     item {
+                        // Permission launcher that handles what happens after permission is granted
+                        val locationPermissionLauncher = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.RequestPermission()
+                        ) { isGranted ->
+                            println("DEBUG: Permission result = $isGranted")
+                            if (isGranted) {
+                                println("DEBUG: Permission GRANTED, now getting location")
+                                scope.launch {
+                                    println("DEBUG: Getting location...")
+                                    val location = locationHelper.getCurrentLocation()
+                                    println("DEBUG: Location received = $location")
+
+                                    if (location != null) {
+                                        println("DEBUG: Location: ${location.latitude}, ${location.longitude}")
+
+                                        // Calculate distance from hostel
+                                        val distance = locationHelper.calculateDistance(location)
+                                        println("DEBUG: Distance from hostel = $distance meters")
+
+                                        // Check if within boundary (100 meters)
+                                        if (locationHelper.isWithinBoundary(location)) {
+                                            println("DEBUG: ✅ Within range! Proceeding with attendance")
+
+                                            if (biometricHelper.isBiometricAvailable()) {
+                                                println("DEBUG: Showing biometric prompt")
+                                                biometricHelper.showBiometricPrompt(
+                                                    activity = context as FragmentActivity,
+                                                    onSuccess = {
+                                                        println("DEBUG: Biometric success, marking attendance")
+                                                        viewModel.markAttendance(AttendanceMethod.BIOMETRIC, location)
+                                                    },
+                                                    onError = { error ->
+                                                        println("DEBUG: Biometric error: $error, marking anyway")
+                                                        viewModel.markAttendance(AttendanceMethod.BIOMETRIC, location)
+                                                    }
+                                                )
+                                            } else {
+                                                println("DEBUG: No biometric available, marking directly")
+                                                viewModel.markAttendance(AttendanceMethod.BIOMETRIC, location)
+                                            }
+                                        } else {
+                                            println("DEBUG: ❌ TOO FAR! Distance = $distance meters")
+                                            Toast.makeText(
+                                                context,
+                                                "You are too far from the hostel\nDistance: ${"%.0f".format(distance)} meters away\n(Must be within 100 meters)",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    } else {
+                                        println("DEBUG: ❌ Location is NULL!")
+                                        Toast.makeText(
+                                            context,
+                                            "Unable to get your location. Please ensure GPS is enabled.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                }
+                            } else {
+                                println("DEBUG: ❌ Permission DENIED")
+                                Toast.makeText(
+                                    context,
+                                    "Location permission is required to mark attendance",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+
                         MarkAttendanceButton(
                             isLoading = attendanceState.isLoading,
                             isWithinTimeWindow = attendanceState.isWithinTimeWindow,
                             onClick = {
+                                println("DEBUG: ========== Button clicked! ==========")
+
                                 if (locationHelper.hasLocationPermission()) {
+                                    println("DEBUG: ✅ Already has location permission")
                                     scope.launch {
-                                        currentLocation = locationHelper.getCurrentLocation()
-                                        if (currentLocation != null) {
-                                            showBiometricPrompt = true
+                                        println("DEBUG: Getting location...")
+                                        val location = locationHelper.getCurrentLocation()
+                                        println("DEBUG: Location received = $location")
+
+                                        if (location != null) {
+                                            println("DEBUG: Location: ${location.latitude}, ${location.longitude}")
+
+                                            // Calculate distance
+                                            val distance = locationHelper.calculateDistance(location)
+                                            println("DEBUG: Distance from hostel = $distance meters")
+
+                                            if (locationHelper.isWithinBoundary(location)) {
+                                                println("DEBUG: ✅ Within range! Proceeding with attendance")
+
+                                                if (biometricHelper.isBiometricAvailable()) {
+                                                    println("DEBUG: Showing biometric prompt")
+                                                    biometricHelper.showBiometricPrompt(
+                                                        activity = context as FragmentActivity,
+                                                        onSuccess = {
+                                                            println("DEBUG: Biometric success, marking attendance")
+                                                            viewModel.markAttendance(AttendanceMethod.BIOMETRIC, location)
+                                                        },
+                                                        onError = { error ->
+                                                            println("DEBUG: Biometric error: $error, marking anyway")
+                                                            viewModel.markAttendance(AttendanceMethod.BIOMETRIC, location)
+                                                        }
+                                                    )
+                                                } else {
+                                                    println("DEBUG: No biometric available, marking directly")
+                                                    viewModel.markAttendance(AttendanceMethod.BIOMETRIC, location)
+                                                }
+                                            } else {
+                                                println("DEBUG: ❌ TOO FAR! Distance = $distance meters")
+                                                Toast.makeText(
+                                                    context,
+                                                    "You are too far from the hostel\nDistance: ${"%.0f".format(distance)} meters away\n(Must be within 100 meters)",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+                                        } else {
+                                            println("DEBUG: ❌ Location is NULL!")
+                                            Toast.makeText(
+                                                context,
+                                                "Unable to get your location. Please ensure GPS is enabled.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
                                         }
                                     }
                                 } else {
+                                    println("DEBUG: ❌ No location permission, requesting...")
                                     locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                                 }
                             }
                         )
                     }
                 }
-
                 // Stats Card
                 item {
                     StatsCard(stats = attendanceState.stats)

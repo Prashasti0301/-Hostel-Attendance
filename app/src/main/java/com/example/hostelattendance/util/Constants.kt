@@ -4,9 +4,9 @@ import com.google.firebase.firestore.GeoPoint
 
 object Constants {
     // Hostel Boundary - CHANGE TO YOUR ACTUAL COORDINATES!
-    // To find: Open Google Maps → Right-click hostel → Click coordinates
-    val HOSTEL_CENTER = GeoPoint(24.6512, 77.4346) // JUET Guna approximate
-    const val HOSTEL_RADIUS_METERS = 50000.0 // 200 meters radius
+
+    val HOSTEL_CENTER = GeoPoint(24.436924752254967, 77.15831449580436) // JUET Guna approximate
+    const val HOSTEL_RADIUS_METERS = 40000.0
 
     // Attendance Time Window
     const val ATTENDANCE_START_HOUR = 0

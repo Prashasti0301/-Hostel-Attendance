@@ -11,14 +11,15 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.firebase.firestore.GeoPoint
 import kotlinx.coroutines.tasks.await
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 class LocationHelper(private val context: Context) {
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
+
+    // JUET Guna Hostel coordinates
+    private val HOSTEL_LATITUDE = 24.436924752254967
+    private val HOSTEL_LONGITUDE = 77.15831449580436
+    private val HOSTEL_RADIUS_METERS = 100.0 // 100 meter radius
 
     fun hasLocationPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
@@ -28,38 +29,43 @@ class LocationHelper(private val context: Context) {
     }
 
     suspend fun getCurrentLocation(): Location? {
-        if (!hasLocationPermission()) return null
+        if (!hasLocationPermission()) {
+            println("DEBUG LocationHelper: No permission")
+            return null
+        }
 
         return try {
+            println("DEBUG LocationHelper: Requesting location...")
             val cancellationTokenSource = CancellationTokenSource()
-            fusedLocationClient.getCurrentLocation(
+            val location = fusedLocationClient.getCurrentLocation(
                 Priority.PRIORITY_HIGH_ACCURACY,
                 cancellationTokenSource.token
             ).await()
+            println("DEBUG LocationHelper: Got location = $location")
+            location
         } catch (e: Exception) {
+            println("DEBUG LocationHelper: Error = ${e.message}")
             null
         }
     }
 
-    fun isWithinBoundary(userLocation: Location): Boolean {
-        val distance = calculateDistance(
-            userLocation.latitude,
-            userLocation.longitude,
-            Constants.HOSTEL_CENTER.latitude,
-            Constants.HOSTEL_CENTER.longitude
-        )
-        return distance <= Constants.HOSTEL_RADIUS_METERS
+    // Calculate distance from current location to hostel (returns meters)
+    fun calculateDistance(currentLocation: Location): Float {
+        val hostelLocation = Location("hostel").apply {
+            latitude = HOSTEL_LATITUDE
+            longitude = HOSTEL_LONGITUDE
+        }
+        val distance = currentLocation.distanceTo(hostelLocation)
+        println("DEBUG LocationHelper: Distance calculated = $distance meters")
+        return distance
     }
 
-    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val earthRadius = 6371000.0 // meters
-        val dLat = Math.toRadians(lat2 - lat1)
-        val dLon = Math.toRadians(lon2 - lon1)
-        val a = sin(dLat / 2) * sin(dLat / 2) +
-                cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
-                sin(dLon / 2) * sin(dLon / 2)
-        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        return earthRadius * c
+    // Check if user is within hostel boundary
+    fun isWithinBoundary(userLocation: Location): Boolean {
+        val distance = calculateDistance(userLocation)
+        val isWithin = distance <= HOSTEL_RADIUS_METERS
+        println("DEBUG LocationHelper: Within boundary = $isWithin (distance: $distance, max: $HOSTEL_RADIUS_METERS)")
+        return isWithin
     }
 
     fun locationToGeoPoint(location: Location): GeoPoint {
@@ -67,11 +73,6 @@ class LocationHelper(private val context: Context) {
     }
 
     fun getDistanceFromHostel(userLocation: Location): Double {
-        return calculateDistance(
-            userLocation.latitude,
-            userLocation.longitude,
-            Constants.HOSTEL_CENTER.latitude,
-            Constants.HOSTEL_CENTER.longitude
-        )
+        return calculateDistance(userLocation).toDouble()
     }
 }
