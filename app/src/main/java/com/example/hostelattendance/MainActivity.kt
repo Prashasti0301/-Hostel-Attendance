@@ -3,14 +3,14 @@ package com.example.hostelattendance
 import android.Manifest
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.fragment.app.FragmentActivity  // ✅ CHANGED: Use FragmentActivity instead of ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -21,9 +21,9 @@ import com.example.hostelattendance.ui.auth.RegisterScreen
 import com.example.hostelattendance.ui.navigation.Screen
 import com.example.hostelattendance.ui.theme.HostelAttendanceTheme
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {  // ✅ CHANGED: FragmentActivity instead of ComponentActivity
 
-    // ✅ Permission launcher - ADDED
+    // ✅ Permission launcher
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ✅ Request location permission - ADDED
+        // ✅ Request location permission
         locationPermissionRequest.launch(
             arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,

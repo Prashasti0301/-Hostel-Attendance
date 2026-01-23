@@ -72,7 +72,9 @@ fun AttendanceScreen(
                         }
                     }
                 },
-                actions = {
+                actions =
+
+                    {
                     IconButton(onClick = { viewModel.refreshData() }) {
                         Icon(
                             Icons.Default.Refresh,
@@ -114,6 +116,8 @@ fun AttendanceScreen(
                         remainingTime = attendanceState.remainingTime
                     )
                 }
+
+
 
                 // Mark Attendance Button
                 if (!attendanceState.hasMarkedToday) {

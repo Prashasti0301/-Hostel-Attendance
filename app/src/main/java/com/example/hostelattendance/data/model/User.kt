@@ -9,5 +9,6 @@ data class User(
     val name: String = "",
     val registeredAt: Timestamp = Timestamp.now(),
     val biometricEnabled: Boolean = false,
-    val deviceId: String = ""
+    val deviceId: String = "",
+    val role: String = "student"
 )
